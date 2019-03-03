@@ -21,6 +21,6 @@ See [LICENSE.md](LICENSE.md).
 
 ## Credits
 
-Jordan Russell (http://jrsoftware.org), the author of Toolbar2000.  
+Jordan Russell (http://jrsoftware.org), author of Toolbar2000.  
 Alex A. Denisov, TBX-related modifications.  
 Yuri Plashenkov (https://plashenkov.com), later fixes.
