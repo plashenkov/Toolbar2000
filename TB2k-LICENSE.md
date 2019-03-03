@@ -1,8 +1,8 @@
-Toolbar2000 License v3.2
-========================
+# Toolbar2000 License v3.2
 
 "Author" herein refers to Jordan Russell (the creator of the Toolbar2000
 components).
+
 "Software" refers to all files bearing this notice, as well as any other
 files and source code included with Toolbar2000 (typically extracted from a
 .zip archive), and all content in them, regardless of whether any
@@ -16,7 +16,7 @@ Copyright (C) 1998-2008 Jordan Russell. All rights reserved.
 Use and distribution of the software is permitted provided that all of the
 following terms are accepted:
 
-1. The Software is provided "as-is," without any express or implied
+1. The Software is provided "as-is", without any express or implied
    warranty. In no event shall the Author be held liable for any damages
    arising from the use of the Software.
 
@@ -56,6 +56,6 @@ If you do not agree to all of the above terms, you are not permitted to
 use the Software in any way, and all copies of it must be deleted from your
 system(s).
 
-Jordan Russell
-jr-2008 AT jrsoftware.org
+Jordan Russell  
+jr-2008 AT jrsoftware.org  
 http://www.jrsoftware.org/
