@@ -8,8 +8,11 @@ This is a special version of Toolbar2000 to use with [TBX](https://github.com/pl
 
 Uninstall previous version of Toolbar2000 if installed.
 
-Add `Toolbar2000\Source` directory to your IDE options, then open and compile
-`Toolbar2000\Packages\TB2000_Run.dpk`, open and install `Toolbar2000\Packages\TB2000_Dsgn.dpk`.
+Add `Toolbar2000\Source` directory to your IDE library path,
+then open and compile `Toolbar2000\Packages\TB2000_Run.dpk`,
+open and install `Toolbar2000\Packages\TB2000_Dsgn.dpk`.
+
+If you see the "Class TTBToolbar not found" error message, click Cancel.
 
 ## License
 
