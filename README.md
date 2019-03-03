@@ -1,8 +1,8 @@
-# Toolbar2000 (special version for TBX)
+# Toolbar2000
 
-Toolbar2000 is a set of rich menus and toolbars components for Delphi / C++Builder.
+Toolbar2000 is a set of neat menus and toolbars components for Delphi / C++Builder.
 
-**NOTE:** This is a special version of Toolbar2000 to use with [TBX](https://github.com/plashenkov/TBX).
+This is a special version of Toolbar2000 to use with [TBX](https://github.com/plashenkov/TBX).
 
 ## Installation
 
@@ -21,6 +21,6 @@ See [LICENSE.md](LICENSE.md).
 
 ## Credits
 
-Jordan Russell (http://jrsoftware.org), Toolbar2000 author.  
+Jordan Russell (http://jrsoftware.org), the author of Toolbar2000.  
 Alex A. Denisov, TBX-related modifications.  
 Yuri Plashenkov (https://plashenkov.com), later fixes.
