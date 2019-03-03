@@ -1,4 +1,4 @@
-package tb2kdsgn_d10;
+package TB2000_Dsgn;
 
 {$R *.res}
 {$R '..\Source\TB2Reg.dcr'}
@@ -12,25 +12,27 @@ package tb2kdsgn_d10;
 {$LOCALSYMBOLS ON}
 {$LONGSTRINGS ON}
 {$OPENSTRINGS ON}
-{$OPTIMIZATION ON}
+{$OPTIMIZATION OFF}
 {$OVERFLOWCHECKS OFF}
 {$RANGECHECKS OFF}
 {$REFERENCEINFO ON}
 {$SAFEDIVIDE OFF}
-{$STACKFRAMES OFF}
+{$STACKFRAMES ON}
 {$TYPEDADDRESS OFF}
 {$VARSTRINGCHECKS ON}
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $3F800000}
+{$DEFINE DEBUG}
 {$DESCRIPTION 'Toolbar2000 Design Package (Jordan Russell)'}
 {$DESIGNONLY}
 {$IMPLICITBUILD OFF}
 
 requires
+  rtl,
   vcl,
   dclstd,
-  tb2k_d10;
+  TB2000_Run;
 
 contains
   TB2Reg in '..\Source\TB2Reg.pas',
@@ -39,4 +41,3 @@ contains
   TB2DsgnConvertOptions in '..\Source\TB2DsgnConvertOptions.pas' {TBConvertOptionsForm};
 
 end.
-
