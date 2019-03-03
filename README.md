@@ -15,7 +15,7 @@ Add `Toolbar2000\Source` directory to your IDE options, then open and compile
 
 Toolbar2000 is dual-licensed. If you use it in a proprietary/commercial application, you must
 [purchase a license](http://jrsoftware.org/tb2kreg.php). Alternatively, if your application
-is open-source/GPL-licensed, you can choose the GPL-license.
+is open-source/GPL-licensed, you can choose the GPL license.
 
 See [LICENSE.md](LICENSE.md).
 
