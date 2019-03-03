@@ -6,7 +6,7 @@ This is a special version of Toolbar2000 to use with [TBX](https://github.com/pl
 
 ## Installation
 
-Uninstall previous version of Toolbar2000 if installed.
+Uninstall previous version of Toolbar2000 (if installed).
 
 Add `Toolbar2000\Source` directory to your IDE library path,
 then open and compile `Toolbar2000\Packages\TB2000_Run.dpk`,
