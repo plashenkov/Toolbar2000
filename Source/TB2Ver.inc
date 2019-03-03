@@ -32,6 +32,18 @@
                       {$DEFINE JR_D11}  { then it must be at least Delphi 11 (2007) }
                       {$IFNDEF VER190}  { if it's not .NET Delphi 11 (2007) }
                         {$DEFINE JR_D12}  { then it must be at least Delphi 12 (2009) }
+                        {$IFNDEF VER200}  { if it's not Delphi 12 (2009) }
+                          {$DEFINE JR_D14}  { then it must be at least Delphi 14 (2010) }
+                          {$IFNDEF VER210}  { if it's not Delphi 14 (2010) }
+                            {$DEFINE JR_D15}  { then it must be at least Delphi 15 (XE) }
+                            {$IFNDEF VER220}  { if it's not Delphi 15 (XE) }
+                              {$DEFINE JR_D16}  { then it must be at least Delphi 16 (XE2) }
+                              {$IFNDEF VER230}  { if it's not Delphi 16 (XE2) }
+                                {$DEFINE JR_D17}  { then it must be at least Delphi 17 (XE3) }
+                              {$ENDIF}
+                            {$ENDIF}
+                          {$ENDIF}
+                        {$ENDIF}
                       {$ENDIF}
                     {$ENDIF}
                   {$ENDIF}

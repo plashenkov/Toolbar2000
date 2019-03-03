@@ -157,6 +157,12 @@ type
 procedure TBRegisterItemClass(AClass: TTBCustomItemClass;
   const ACaption: String; ResInstance: HINST);
 
+type
+  TTBDsgnEditorHook = procedure(Sender: TTBItemEditForm) of object;
+
+procedure TBRegisterDsgnEditorHook(Hook: TTBDsgnEditorHook);
+procedure TBUnregisterDsgnEditorHook(Hook: TTBDsgnEditorHook);
+
 implementation
 
 {$R *.DFM}
@@ -182,6 +188,7 @@ type
 var
   ItemClasses: TList;
   ItemImageList: TImageList;
+  EditFormHooks: TList;
 
 {$IFNDEF JR_D6}
 function CreateSelectionList: TDesignerSelectionList;
@@ -207,7 +214,7 @@ end;
   can't be unloaded. When a design-time package is uninstalled, it remains
   loaded until the IDE is restarted. }
 {$IFNDEF CLR}
-procedure UnregisterModuleItemClasses(AModule: {$IFDEF JR_D5} LongWord {$ELSE} Integer {$ENDIF});
+procedure UnregisterModuleItemClasses(AModule: {$IFDEF JR_D16} NativeInt {$ELSE} {$IFDEF JR_D5} LongWord {$ELSE} Integer {$ENDIF} {$ENDIF});
 var
   I: Integer;
   Info: TItemClassInfo;
@@ -288,9 +295,16 @@ begin
     second time, without reloading either of the two packages. As a result,
     the TBRegisterItemClass calls are repeated. To avoid doubled items on the
     editor form's More menu, check if the class was already registered. }
-  for I := 0 to ItemClasses.Count-1 do
-    if TItemClassInfo(ItemClasses[I]).ItemClass = AClass then
-      Exit;
+  if ItemClasses <> nil then
+    for I := ItemClasses.Count - 1 downto 0 do
+    begin
+      Info := TItemClassInfo(ItemClasses[I]);
+      if Info.ItemClass = AClass then
+      begin
+        ItemClasses.Delete(I);
+        Info.Free;
+      end;
+    end;
   Info := TItemClassInfo.Create;
   Info.ItemClass := AClass;
   Info.Caption := ACaption;
@@ -416,6 +430,10 @@ begin
     Item.OnClick := MoreItemClick;
     MoreMenu.Add(Item);
   end;
+  { Run the hooks }
+  if EditFormHooks <> nil then
+    for I := 0 to EditFormHooks.Count - 1 do
+      TTBDsgnEditorHook(EditFormHooks[I]^)(Self);
 end;
 
 destructor TTBItemEditForm.Destroy;
@@ -1413,6 +1431,32 @@ begin
   Result := '(TB2000 Items)';
 end;
 
+procedure TBRegisterDsgnEditorHook(Hook: TTBDsgnEditorHook);
+var
+  H: ^TTBDsgnEditorHook;
+begin
+  New(H);
+  H^ := Hook;
+  EditFormHooks.Add(H);
+end;
+
+procedure TBUnregisterDsgnEditorHook(Hook: TTBDsgnEditorHook);
+var
+  H: ^TTBDsgnEditorHook;
+  I: Integer;
+begin
+  for I := EditFormHooks.Count - 1 downto 0 do
+  begin
+    H := EditFormHooks[I];
+    if (TMethod(H^).Code = TMethod(Hook).Code) and
+      (TMethod(H^).Data = TMethod(Hook).Data) then
+    begin
+      Dispose(H);
+      EditFormHooks.Delete(I);
+    end;
+  end;
+end;
+
 initialization
   ItemImageList := TImageList.Create(nil);
   {$IFNDEF CLR}
@@ -1427,6 +1471,7 @@ initialization
   LoadItemImage(Assembly.GetExecutingAssembly, 'TB2DsgnEditorImages.bmp');
   {$ENDIF}
   ItemClasses := TList.Create;
+  EditFormHooks := TList.Create;
   {$IFNDEF CLR}
   AddModuleUnloadProc(UnregisterModuleItemClasses);
   {$ENDIF}
@@ -1436,4 +1481,5 @@ finalization
   {$ENDIF}
   FreeItemClasses;
   FreeAndNil(ItemImageList);
+  FreeAndNil(EditFormHooks);
 end.

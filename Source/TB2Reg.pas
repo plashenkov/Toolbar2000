@@ -31,10 +31,36 @@ interface
 {$I TB2Ver.inc}
 
 uses
-  Windows, SysUtils, Classes, Graphics, Controls, Dialogs, ActnList, ImgList,
+  Windows, Actions, SysUtils, Classes, Graphics, Controls, Dialogs, ActnList, ImgList,
   {$IFDEF JR_D6} DesignIntf, DesignEditors, VCLEditors, {$ELSE} DsgnIntf, {$ENDIF}
   TB2Toolbar, TB2ToolWindow, TB2Dock, TB2Item, TB2ExtItems, TB2MRU, TB2MDI,
   TB2DsgnItemEditor;
+
+{$IFDEF JR_D5}
+
+{ TTBImageIndexPropertyEditor }
+
+{ Unfortunately TComponentImageIndexPropertyEditor seems to be gone in
+  Delphi 6, so we have to use our own image index property editor class } 
+
+type
+  TTBImageIndexPropertyEditor = class(TIntegerProperty
+    {$IFDEF JR_D6} , ICustomPropertyListDrawing {$ENDIF})
+  public
+    function GetAttributes: TPropertyAttributes; override;
+    procedure GetValues(Proc: TGetStrProc); override;
+    function GetImageListAt(Index: Integer): TCustomImageList; virtual;
+
+    // ICustomPropertyListDrawing
+    procedure ListMeasureHeight(const Value: string; ACanvas: TCanvas;
+      var AHeight: Integer); {$IFNDEF JR_D6} override; {$ENDIF}
+    procedure ListMeasureWidth(const Value: string; ACanvas: TCanvas;
+      var AWidth: Integer); {$IFNDEF JR_D6} override; {$ENDIF}
+    procedure ListDrawValue(const Value: string; ACanvas: TCanvas;
+      const ARect: TRect; ASelected: Boolean); {$IFNDEF JR_D6} override; {$ENDIF}
+  end;
+
+{$ENDIF}
 
 procedure Register;
 procedure TBRegisterClasses(const AClasses: array of TPersistentClass);
@@ -68,28 +94,6 @@ uses
   ImgEdit;
 
 {$IFDEF JR_D5}
-
-{ TTBImageIndexPropertyEditor }
-
-{ Unfortunately TComponentImageIndexPropertyEditor seems to be gone in
-  Delphi 6, so we have to use our own image index property editor class } 
-
-type
-  TTBImageIndexPropertyEditor = class(TIntegerProperty
-    {$IFDEF JR_D6} , ICustomPropertyListDrawing {$ENDIF})
-  public
-    function GetAttributes: TPropertyAttributes; override;
-    procedure GetValues(Proc: TGetStrProc); override;
-    function GetImageListAt(Index: Integer): TCustomImageList; virtual;
-
-    // ICustomPropertyListDrawing
-    procedure ListMeasureHeight(const Value: string; ACanvas: TCanvas;
-      var AHeight: Integer); {$IFNDEF JR_D6} override; {$ENDIF}
-    procedure ListMeasureWidth(const Value: string; ACanvas: TCanvas;
-      var AWidth: Integer); {$IFNDEF JR_D6} override; {$ENDIF}
-    procedure ListDrawValue(const Value: string; ACanvas: TCanvas;
-      const ARect: TRect; ASelected: Boolean); {$IFNDEF JR_D6} override; {$ENDIF}
-  end;
 
 function TTBImageIndexPropertyEditor.GetAttributes: TPropertyAttributes;
 begin

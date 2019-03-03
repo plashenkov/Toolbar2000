@@ -90,6 +90,7 @@ type
     function GetChevronHint: String;
     function GetImages: TCustomImageList;
     function GetItems: TTBCustomItem;
+    function GetItemsPopupMenu: TPopupMenu;
     function GetLinkSubitems: TTBCustomItem;
     function GetOptions: TTBItemOptions;
     procedure InstallMainWindowHook;
@@ -100,6 +101,7 @@ type
     procedure SetChevronPriorityForNewItems(Value: TTBChevronPriorityForNewItems);
     procedure SetFloatingWidth(Value: Integer);
     procedure SetImages(Value: TCustomImageList);
+    procedure SetItemsPopupMenu(Value: TPopupMenu);
     procedure SetLinkSubitems(Value: TTBCustomItem);
     procedure SetMainWindowHook;
     procedure SetMenuBar(Value: Boolean);
@@ -189,6 +191,7 @@ type
     property FloatingWidth: Integer read FFloatingWidth write SetFloatingWidth default 0;
     property Images: TCustomImageList read GetImages write SetImages;
     property Items: TTBRootItem read FItem;
+    property ItemsPopupMenu: TPopupMenu read GetItemsPopupMenu write SetItemsPopupMenu;
     property LinkSubitems: TTBCustomItem read GetLinkSubitems write SetLinkSubitems;
     property Options: TTBItemOptions read GetOptions write SetOptions default [];
     property MenuBar: Boolean read FMenuBar write SetMenuBar default False;
@@ -228,6 +231,7 @@ type
     property HideWhenInactive;
     property Images;
     property Items;
+    property ItemsPopupMenu;
     property LastDock;
     property LinkSubitems;
     property MenuBar;
@@ -255,6 +259,9 @@ type
     {$ENDIF}
     property OnDragDrop;
     property OnDragOver;
+    {$IFDEF JR_D9}
+    property OnMouseActivate;
+    {$ENDIF}
     property OnMouseDown;
     property OnMouseMove;
     property OnMouseUp;
@@ -278,6 +285,7 @@ type
   protected
     function GetChevronParentView: TTBView; override;
     function GetItemViewerClass(AView: TTBView): TTBItemViewerClass; override;
+    property Toolbar: TTBCustomToolbar read FToolbar;
   public
     constructor Create(AOwner: TComponent); override;
   end;
@@ -297,6 +305,23 @@ implementation
 uses
   {$IFDEF CLR} System.Runtime.InteropServices, System.Text, {$ENDIF}
   TB2Consts, TB2Common, TB2Hook;
+
+{$IFDEF WIN64}
+type
+  TSmallPoint = TPoint;
+
+function SmallPointToPoint(const P: TSmallPoint): TPoint;
+begin
+  Result.X := P.X;
+  Result.Y := P.Y;
+end;
+
+function PointToSmallPoint(const P: TPoint): TSmallPoint;
+begin
+  Result.X := P.X;
+  Result.Y := P.Y;
+end;
+{$ENDIF WIN64}
 
 const
   { Constants for TTBCustomToolbar-specific registry values. Do not localize! }
@@ -675,7 +700,7 @@ begin
   Result := TTBControlItem.Create(Owner);
   Result.Control := Ctl;
   if (csDesigning in ComponentState) and Assigned(Owner) then begin
-    { Needs a name for compatibility with form inheritance } 
+    { Needs a name for compatibility with form inheritance }
     I := 1;
     while True do begin
       S := Format('TBControlItem%d', [I]);
@@ -931,7 +956,40 @@ end;
 {$IFDEF JR_D5}
 procedure TTBCustomToolbar.DoContextPopup(MousePos: TPoint;
   var Handled: Boolean);
+var
+  Viewer: TTBItemViewer;
+  R: TRect;
 begin
+  Viewer := FView.Selected;
+  if Assigned(Viewer) then
+  begin
+    PopupMenu := Viewer.GetPopupMenu;
+    if Assigned(PopupMenu) and PopupMenu.AutoPopup then
+    begin
+      inherited;
+      if not Handled then
+      begin
+        if InvalidPoint(MousePos) then
+        begin
+          R := Viewer.BoundsRect;
+          MousePos := View.Window.ClientToScreen(R.TopLeft);
+          Inc(MousePos.Y, R.Bottom - R.Top);
+        end
+        else MousePos := ClientToScreen(MousePos);
+        SendCancelMode(Self);
+        PopupMenu.PopupComponent := Viewer.Item;
+        FIgnoreMouseLeave := True;
+        try
+          PopupMenu.Popup(MousePos.X, MousePos.Y);
+        finally
+          FIgnoreMouseLeave := False;
+        end;
+        CancelHover;
+        Handled := True;
+        Exit;
+      end;
+    end;
+  end;
   CancelHover;
   inherited;
 end;
@@ -956,6 +1014,8 @@ begin
     P := ClientToScreen(Point(X, Y));
     FView.UpdateSelection(P, True);
     if Assigned(FView.Selected) then begin
+      with TTBItemViewerAccess(FView.Selected) do
+        MouseMove(X- BoundsRect.Left, Y- BoundsRect.Top);
       Item := FView.Selected.Item;
       if not(tboLongHintInMenuOnly in Item.EffectiveOptions) then
         Hint := Item.Hint
@@ -1118,6 +1178,16 @@ end;
 procedure TTBCustomToolbar.SetImages(Value: TCustomImageList);
 begin
   FItem.SubMenuImages := Value;
+end;
+
+function TTBCustomToolbar.GetItemsPopupMenu: TPopupMenu;
+begin
+  Result := FItem.SubitemsPopupMenu;
+end;
+
+procedure TTBCustomToolbar.SetItemsPopupMenu(Value: TPopupMenu);
+begin
+  FItem.SubitemsPopupMenu := Value;
 end;
 
 function TTBCustomToolbar.GetLinkSubitems: TTBCustomItem;

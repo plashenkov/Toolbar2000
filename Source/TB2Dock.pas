@@ -79,9 +79,6 @@ type
     FDisableArrangeToolbars: Integer;  { Increment to disable ArrangeToolbars }
     FArrangeToolbarsNeeded: Boolean;
     FNonClientWidth, FNonClientHeight: Integer;
-    DockList: TList;  { List of the toolbars docked, and those floating and have LastDock
-                        pointing to the dock. Items are casted in TTBCustomDockableWindow's. }
-    DockVisibleList: TList;  { Similar to DockList, but lists only docked and visible toolbars }
 
     { Property access methods }
     //function GetVersion: TToolbar97Version;
@@ -99,14 +96,11 @@ type
     { Internal }
     procedure BackgroundChanged(Sender: TObject);
     procedure ChangeDockList(const Insert: Boolean; const Bar: TTBCustomDockableWindow);
-    procedure ChangeWidthHeight(const NewWidth, NewHeight: Integer);
     procedure CommitPositions;
     procedure DrawNCArea(const DrawToDC: Boolean; const ADC: HDC;
       const Clip: HRGN);
     function GetDesignModeRowOf(const XY: Integer): Integer;
-    function HasVisibleToolbars: Boolean;
     procedure RelayMsgToFloatingBars({$IFNDEF CLR}var{$ELSE}const{$ENDIF} Message: TMessage);
-    function ToolbarVisibleOnDock(const AToolbar: TTBCustomDockableWindow): Boolean;
     procedure ToolbarVisibilityChanged(const Bar: TTBCustomDockableWindow;
       const ForceRemove: Boolean);
 
@@ -125,21 +119,30 @@ type
     procedure WMPrintClient(var Message: {$IFNDEF CLR} TMessage {$ELSE} TWMPrintClient {$ENDIF}); message WM_PRINTCLIENT;
     procedure WMSysCommand(var Message: TWMSysCommand); message WM_SYSCOMMAND;
   protected
+    DockList: TList;  { List of the toolbars docked, and those floating and have LastDock
+                        pointing to the dock. Items are casted in TTBCustomDockableWindow's. }
+    DockVisibleList: TList;  { Similar to DockList, but lists only docked and visible toolbars }
+    function Accepts(ADockableWindow: TTBCustomDockableWindow): Boolean; virtual;
     procedure AlignControls(AControl: TControl; var Rect: TRect); override;
+    procedure ChangeWidthHeight(const NewWidth, NewHeight: Integer);
     procedure CreateParams(var Params: TCreateParams); override;
     procedure DrawBackground(DC: HDC; const DrawRect: TRect); virtual;
     function GetPalette: HPALETTE; override;
+    function HasVisibleToolbars: Boolean;
     procedure InvalidateBackgrounds;
     procedure Loaded; override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure SetParent(AParent: TWinControl); override;
+    function ToolbarVisibleOnDock(const AToolbar: TTBCustomDockableWindow): Boolean;
     procedure Paint; override;
     function UsingBackground: Boolean; virtual;
+    property ArrangeToolbarsNeeded: Boolean read FArrangeToolbarsNeeded write FArrangeToolbarsNeeded;
+    property DisableArrangeToolbars: Integer read FDisableArrangeToolbars write FDisableArrangeToolbars;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
-    procedure ArrangeToolbars;
+    procedure ArrangeToolbars; virtual;
     procedure BeginUpdate;
     procedure EndUpdate;
     function GetCurrentRowSize(const Row: Integer; var AFullSize: Boolean): Integer;
@@ -169,6 +172,9 @@ type
     property OnContextPopup;
     {$ENDIF}
     property OnInsertRemoveBar: TTBInsertRemoveEvent read FOnInsertRemoveBar write FOnInsertRemoveBar;
+    {$IFDEF JR_D9}
+    property OnMouseActivate;
+    {$ENDIF}
     property OnMouseDown;
     property OnMouseMove;
     property OnMouseUp;
@@ -263,6 +269,7 @@ type
   private
     { Property variables }
     FAutoResize: Boolean;
+    FDblClickUndock: Boolean;
     FDockPos, FDockRow, FEffectiveDockPos, FEffectiveDockRow: Integer;
     FDocked: Boolean;
     FCurrentDock, FDefaultDock, FLastDock: TTBDock;
@@ -367,6 +374,9 @@ type
     procedure WMNCLButtonDown(var Message: TWMNCLButtonDown); message WM_NCLBUTTONDOWN;
     procedure WMNCPaint(var Message: TMessage); message WM_NCPAINT;
     procedure WMNCRButtonUp(var Message: TWMNCRButtonUp); message WM_NCRBUTTONUP;
+    {$IFDEF JR_D10}
+    procedure WMCaptureChanged(var Message: TMessage); message WM_CAPTURECHANGED;
+    {$ENDIF}
     procedure WMPrint(var Message: TMessage); message WM_PRINT;
     procedure WMPrintClient(var Message: {$IFNDEF CLR} TMessage {$ELSE} TWMPrintClient {$ENDIF}); message WM_PRINTCLIENT;
     procedure WMSetCursor(var Message: TWMSetCursor); message WM_SETCURSOR;
@@ -424,6 +434,7 @@ type
     { Methods accessible to descendants }
     procedure Arrange;
     function CalcNCSizes: TPoint; virtual;
+    function CanDockTo(ADock: TTBDock): Boolean; virtual;
     procedure ChangeSize(AWidth, AHeight: Integer);
     function ChildControlTransparent(Ctl: TControl): Boolean; dynamic;
     procedure Close;
@@ -448,7 +459,10 @@ type
     procedure ResizeTrack(var Rect: TRect; const OrigRect: TRect); dynamic;
     procedure ResizeTrackAccept; dynamic;
     procedure SizeChanging(const AWidth, AHeight: Integer); virtual;
+    property EffectiveDockPosAccess: Integer read FEffectiveDockPos write FEffectiveDockPos;
+    property EffectiveDockRowAccess: Integer read FEffectiveDockRow write FEffectiveDockRow;
   public
+    property DblClickUndock: Boolean read FDblClickUndock write FDblClickUndock default True;
     property Docked: Boolean read FDocked;
     property Canvas;
     property CurrentDock: TTBDock read FCurrentDock write SetCurrentDock stored False;
@@ -1056,6 +1070,11 @@ begin
   end;
 end;
 
+function TTBDock.Accepts(ADockableWindow: TTBCustomDockableWindow): Boolean;
+begin
+  Result := AllowDrag;
+end;
+
 procedure TTBDock.AlignControls(AControl: TControl; var Rect: TRect);
 begin
   ArrangeToolbars;
@@ -1323,7 +1342,7 @@ begin
           PosData[I].MinimumSize := 0;
           T.GetMinShrinkSize(PosData[I].MinimumSize);
           if PosData[I].MinimumSize > PosData[I].FullSize then
-            { don't allow minimum shrink size to be less than full size } 
+            { don't allow minimum shrink size to be less than full size }
             PosData[I].MinimumSize := PosData[I].FullSize;
           if PosData[I].ShrinkMode = tbsmChevron then
             Inc(MinRealPos, PosData[I].MinimumSize)
@@ -2586,6 +2605,7 @@ begin
   FActivateParent := True;
   FBorderStyle := bsSingle;
   FCloseButton := True;
+  FDblClickUndock := True;
   FDockableTo := [dpTop, dpBottom, dpLeft, dpRight];
   FDockableWindowStyles := [tbdsResizeEightCorner, tbdsResizeClipCursor];
   FDockPos := -1;
@@ -3072,6 +3092,11 @@ end;
 procedure TTBCustomDockableWindow.RemoveDockForm(const Form: TTBCustomForm);
 begin
   RemoveFromList(FDockForms, Form);
+end;
+
+function TTBCustomDockableWindow.CanDockTo(ADock: TTBDock): Boolean;
+begin
+  Result := ADock.Position in DockableTo;
 end;
 
 function TTBCustomDockableWindow.IsAutoResized: Boolean;
@@ -3680,6 +3705,14 @@ begin
   HandleWMPrintClient(PaintHandler, Message);
 end;
 
+{$IFDEF JR_D10}
+procedure TTBCustomDockableWindow.WMCaptureChanged(var Message: TMessage);
+begin
+  CancelNCHover;
+  inherited;
+end;
+{$ENDIF}
+
 procedure TTBCustomDockableWindow.WMEraseBkgnd(var Message: TWMEraseBkgnd);
 var
   R, R2, R3: TRect;
@@ -3986,7 +4019,7 @@ var
       { Check if it can dock }
       MouseOverDock := nil;
       if StartDocking and not PreventDocking then
-        for I := 0 to DockList.Count-1 do begin
+        for I := DockList.Count-1 downto 0 do begin
           Dock := TTBDock(DockList[I]);
           if CheckIfCanDockTo(Dock, FindDockedSize(Dock).BoundsRect) then begin
             MouseOverDock := Dock;
@@ -4048,7 +4081,7 @@ var
       if FDragSplitting then
         SetCursor(LoadCursor(0, SplitCursors[SplitVertical]))
       else
-        SetCursor(OldCursor);
+        SetCursor(LoadCursor(0, IDC_SIZEALL));
     end;
 
     { Update the dragging outline }
@@ -4064,7 +4097,7 @@ var
 
     function AcceptableDock(const D: TTBDock): Boolean;
     begin
-      Result := D.FAllowDrag and (D.Position in DockableTo);
+      Result := D.Accepts(Self) and CanDockTo(D);
     end;
 
     procedure Recurse(const ParentCtl: TWinControl);
@@ -4300,6 +4333,7 @@ begin
           end;
         end;
       finally
+        SetCursor(OldCursor);
         { Since it sometimes breaks out of the loop without capture being
           released }
         if GetCapture = Handle then
@@ -4383,19 +4417,20 @@ end;
 procedure TTBCustomDockableWindow.DoubleClick;
 begin
   if Docked then begin
-    if DockMode = dmCanFloat then begin
+    if DblClickUndock and (DockMode = dmCanFloat) then begin
       Floating := True;
       MoveOnScreen(True);
     end;
   end
-  else
-  if Assigned(LastDock) then
-    Parent := LastDock
-  else
-  if Assigned(DefaultDock) then begin
-    FDockRow := ForceDockAtTopRow;
-    FDockPos := ForceDockAtLeftPos;
-    Parent := DefaultDock;
+  else if Floating then begin
+    if Assigned(LastDock) then
+      Parent := LastDock
+    else
+    if Assigned(DefaultDock) then begin
+      FDockRow := ForceDockAtTopRow;
+      FDockPos := ForceDockAtLeftPos;
+      Parent := DefaultDock;
+    end;
   end;
 end;
 

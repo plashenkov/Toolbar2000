@@ -1250,42 +1250,84 @@ end;
 procedure DrawRotatedText(const DC: HDC; AText: String; const ARect: TRect;
   const AFormat: Cardinal);
 { Like DrawText, but draws the text at a 270 degree angle.
-  The only format flag this function respects is DT_HIDEPREFIX. Text is always
-  drawn centered. }
+  The format flag this function respects are
+  DT_NOPREFIX, DT_HIDEPREFIX, DT_CENTER, DT_END_ELLIPSIS, DT_NOCLIP }
 var
   RotatedFont, SaveFont: HFONT;
   TextMetrics: TTextMetric;
-  X, Y, P, I, SU, FU: Integer;
+  X, Y, P, I, SU, FU, W: Integer;
   SaveAlign: UINT;
   SavePen, Pen: HPEN;
+  Clip: Boolean;
+
+  function GetSize(DC: HDC; const S: string): Integer;
+  var
+    Size: TSize;
+  begin
+    GetTextExtentPoint32Str(DC, S, Size);
+    Result := Size.cx;
+  end;
+
 begin
+  if Length(AText) = 0 then Exit;
+
   RotatedFont := CreateRotatedFont(DC);
   SaveFont := SelectObject(DC, RotatedFont);
 
   GetTextMetrics(DC, TextMetrics);
   X := ARect.Left + ((ARect.Right - ARect.Left) - TextMetrics.tmHeight) div 2;
-  Y := ARect.Top + ((ARect.Bottom - ARect.Top) - GetTextWidth(DC, AText, True)) div 2;
+
+  Clip := (AFormat and DT_NOCLIP) <> DT_NOCLIP;
 
   { Find the index of the character that should be underlined. Delete '&'
     characters from the string. Like DrawText, only the last prefixed character
     will be underlined. }
   P := 0;
   I := 1;
-  while I <= Length(AText) do begin
+  if (AFormat and DT_NOPREFIX) <> DT_NOPREFIX then
+    while I <= Length(AText) do begin
     {$IFNDEF JR_WIDESTR}
-    if AText[I] in LeadBytes then
-      Inc(I)
-    else
+      if AText[I] in LeadBytes then
+        Inc(I)
+      else
     {$ENDIF}
-    if AText[I] = '&' then begin
-      Delete(AText, I, 1);
-      { If the '&' was the last character, don't underline anything }
-      if I > Length(AText) then
-        P := 0
-      else if AText[I] <> '&' then
-        P := I;
+      if AText[I] = '&' then begin
+        Delete(AText, I, 1);
+        { If the '&' was the last character, don't underline anything }
+        if I > Length(AText) then
+          P := 0
+        else if AText[I] <> '&' then
+          P := I;
+      end;
+      Inc(I);
     end;
-    Inc(I);
+
+  if (AFormat and DT_END_ELLIPSIS) = DT_END_ELLIPSIS then
+  begin
+    if (Length(AText) > 1) and (GetSize(DC, AText) > ARect.Bottom - ARect.Top) then
+    begin
+      W := ARect.Bottom - ARect.Top;
+      if W > 2 then
+      begin
+        Delete(AText, Length(AText), 1);
+        while (Length(AText) > 1) and (GetSize(DC, AText + '...') > W) do
+          Delete(AText, Length(AText), 1);
+      end
+      else AText := AText[1];
+      if P > Length(AText) then P := 0;
+      AText := AText + '...';
+    end;
+  end;
+
+  if (AFormat and DT_CENTER) = DT_CENTER then
+    Y := ARect.Top + ((ARect.Bottom - ARect.Top) - GetSize(DC, AText)) div 2
+  else
+    Y := ARect.Top;
+
+  if Clip then
+  begin
+    SaveDC(DC);
+    with ARect do IntersectClipRect(DC, Left, Top, Right, Bottom);
   end;
 
   SaveAlign := SetTextAlign(DC, TA_BOTTOM);
@@ -1303,6 +1345,8 @@ begin
     SelectObject(DC, SavePen);
     DeleteObject(Pen);
   end;
+
+  if Clip then RestoreDC(DC, -1);
 
   SelectObject(DC, SaveFont);
   DeleteObject(RotatedFont);
@@ -1368,7 +1412,7 @@ var
 begin
   Flags := SND_ALIAS or SND_ASYNC or SND_NODEFAULT;
   if Win32Platform <> VER_PLATFORM_WIN32_NT then
-    Flags := Flags or SND_NOSTOP;  { On 9x, native menus' sounds are NOSTOP } 
+    Flags := Flags or SND_NOSTOP;  { On 9x, native menus' sounds are NOSTOP }
   if Win32MajorVersion >= 6 then
     Flags := Flags or SND_SYSTEM;
   PlaySound({$IFNDEF CLR}PChar{$ENDIF}(Alias), 0, Flags);

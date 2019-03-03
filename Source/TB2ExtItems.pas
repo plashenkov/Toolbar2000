@@ -43,6 +43,11 @@ const
   EditItemDefaultEditOptions = [];
   EditItemDefaultEditWidth = 64;
 
+{ Change reasons for TTBEditItem.Text property }
+  tcrSetProperty = 0;  // direct assignment to TTBEditItem.Text property
+  tcrActionLink  = 1;  // change comes from an action link
+  tcrEditControl = 2;  // change is caused by typing in edit area
+
 type
   TTBEditItem = class;
   TTBEditItemViewer = class;
@@ -96,6 +101,7 @@ type
     FEditCaption: String;
     FEditOptions: TTBEditItemOptions;
     FEditWidth: Integer;
+    FExtendedAccept: Boolean;
     FMaxLength: Integer;
     FOnAcceptText: TTBAcceptTextEvent;
     FOnBeginEdit: TTBBeginEditEvent;
@@ -112,10 +118,15 @@ type
     procedure SetText(Value: String);
   protected
     procedure ActionChange(Sender: TObject; CheckDefaults: Boolean); override;
+    function DoAcceptText(var NewText: string): Boolean; virtual;
     procedure DoBeginEdit(Viewer: TTBEditItemViewer); virtual;
+    procedure DoTextChanging(const OldText: String; var NewText: String; Reason: Integer); virtual;
+    procedure DoTextChanged(Reason: Integer); virtual;
     function GetActionLinkClass: TTBCustomItemActionLinkClass; override;
     function GetItemViewerClass(AView: TTBView): TTBItemViewerClass; override;
     function NeedToRecreateViewer(AViewer: TTBItemViewer): Boolean; override;
+    property ExtendedAccept: Boolean read FExtendedAccept write FExtendedAccept default False;
+    procedure SetTextEx(Value: String; Reason: Integer);
   public
     constructor Create(AOwner: TComponent); override;
     procedure Clear;
@@ -150,6 +161,8 @@ type
     property OnSelect;
   end;
 
+  TEditClass = class of TEdit;
+
   TTBEditItemViewer = class(TTBItemViewer)
   private
     FEditControl: TEdit;
@@ -166,6 +179,7 @@ type
     function GetAccValue(var Value: WideString): Boolean; override;
     function GetCaptionText: String; override;
     procedure GetCursor(const Pt: TPoint; var ACursor: HCURSOR); override;
+    function  GetEditControlClass: TEditClass; virtual;
     procedure GetEditRect(var R: TRect); virtual;
     procedure MouseDown(Shift: TShiftState; X, Y: Integer;
       var MouseDownOnMenu: Boolean); override;
@@ -204,10 +218,11 @@ type
     property ShortCut;
     property Visible;
 
+    property OnAdjustImageIndex;
     property OnClick;
     property OnSelect;
   end;
-  
+
 
 implementation
 
@@ -238,9 +253,15 @@ var
   I: Integer;
 begin
   if FEditCaption <> Value then begin
+    {$IFDEF JR_D17}
+    for I := 0 to ClientCount - 1 do
+      if TBasicActionLink(Clients[I]) is TTBEditItemActionLink then
+        TTBEditItemActionLink(Clients[I]).SetEditCaption(Value);
+    {$ELSE}
     for I := 0 to FClients.Count - 1 do
       if TBasicActionLink(FClients[I]) is TTBEditItemActionLink then
         TTBEditItemActionLink(FClients[I]).SetEditCaption(Value);
+    {$ENDIF}
     FEditCaption := Value;
     Change;
   end;
@@ -251,9 +272,15 @@ var
   I: Integer;
 begin
   if FEditOptions <> Value then begin
+    {$IFDEF JR_D17}
+    for I := 0 to ClientCount - 1 do
+      if TBasicActionLink(Clients[I]) is TTBEditItemActionLink then
+        TTBEditItemActionLink(Clients[I]).SetEditOptions(Value);
+    {$ELSE}
     for I := 0 to FClients.Count - 1 do
       if TBasicActionLink(FClients[I]) is TTBEditItemActionLink then
         TTBEditItemActionLink(FClients[I]).SetEditOptions(Value);
+    {$ENDIF}
     FEditOptions := Value;
     Change;
   end;
@@ -264,9 +291,15 @@ var
   I: Integer;
 begin
   if FEditWidth <> Value then begin
+    {$IFDEF JR_D17}
+    for I := 0 to ClientCount - 1 do
+      if TBasicActionLink(Clients[I]) is TTBEditItemActionLink then
+        TTBEditItemActionLink(Clients[I]).SetEditWidth(Value);
+    {$ELSE}
     for I := 0 to FClients.Count - 1 do
       if TBasicActionLink(FClients[I]) is TTBEditItemActionLink then
         TTBEditItemActionLink(FClients[I]).SetEditWidth(Value);
+    {$ENDIF}
     FEditWidth := Value;
     Change;
   end;
@@ -281,9 +314,15 @@ begin
   {$ELSE}
   if @FOnAcceptText <> @Value then begin
   {$ENDIF}
+    {$IFDEF JR_D17}
+    for I := 0 to ClientCount - 1 do
+      if TBasicActionLink(Clients[I]) is TTBEditItemActionLink then
+        TTBEditItemActionLink(Clients[I]).SetOnAcceptText(Value);
+    {$ELSE}
     for I := 0 to FClients.Count - 1 do
       if TBasicActionLink(FClients[I]) is TTBEditItemActionLink then
         TTBEditItemActionLink(FClients[I]).SetOnAcceptText(Value);
+    {$ENDIF}
     FOnAcceptText := Value;
     Change;
   end;
@@ -294,9 +333,15 @@ var
   I: Integer;
 begin
   if FText <> Value then begin
+    {$IFDEF JR_D17}
+    for I := 0 to ClientCount - 1 do
+      if TBasicActionLink(Clients[I]) is TTBEditItemActionLink then
+        TTBEditItemActionLink(Clients[I]).SetText(Value);
+    {$ELSE}
     for I := 0 to FClients.Count - 1 do
       if TBasicActionLink(FClients[I]) is TTBEditItemActionLink then
         TTBEditItemActionLink(FClients[I]).SetText(Value);
+    {$ENDIF}
     FText := Value;
     Change;
   end;
@@ -377,7 +422,7 @@ end;
 
 procedure TTBEditItemActionLink.SetText(const Value: String);
 begin
-  if IsTextLinked then TTBEditItem(FClient).Text := Value;
+  if IsTextLinked then TTBEditItem(FClient).SetTextEx(Value , tcrActionLink);
 end;
 
 
@@ -401,7 +446,7 @@ begin
       if not CheckDefaults or (Self.EditOptions = []) then
         Self.EditOptions := EditOptions;
       if not CheckDefaults or (Self.Text = '') then
-        Self.Text := Text;
+        Self.SetTextEx(Text, tcrActionLink);
       if not CheckDefaults or not Assigned(Self.OnAcceptText) then
         Self.OnAcceptText := OnAcceptText;
     end;
@@ -508,15 +553,41 @@ begin
   end;
 end;
 
-procedure TTBEditItem.SetText(Value: String);
+function TTBEditItem.DoAcceptText(var NewText: string): Boolean;
+begin
+  Result := True;
+  if Assigned(FOnAcceptText) then FOnAcceptText(Self, NewText, Result);
+end;
+
+procedure TTBEditItem.DoTextChanging(const OldText: String; var NewText: String; Reason: Integer);
 begin
   case FCharCase of
-    ecUpperCase: Value := {$IFNDEF CLR} AnsiUpperCase {$ELSE} UpperCase {$ENDIF} (Value);
-    ecLowerCase: Value := {$IFNDEF CLR} AnsiLowerCase {$ELSE} LowerCase {$ENDIF} (Value);
+    ecUpperCase: NewText := {$IFNDEF CLR} AnsiUpperCase {$ELSE} UpperCase {$ENDIF} (NewText);
+    ecLowerCase: NewText := {$IFNDEF CLR} AnsiLowerCase {$ELSE} LowerCase {$ENDIF} (NewText);
   end;
+end;
+
+procedure TTBEditItem.DoTextChanged(Reason: Integer);
+begin
+end;
+
+procedure TTBEditItem.SetText(Value: String);
+begin
+  DoTextChanging(FText, Value, tcrSetProperty);
   if FText <> Value then begin
     FText := Value;
     Change(False);
+    DoTextChanged(tcrSetProperty);
+  end;
+end;
+
+procedure TTBEditItem.SetTextEx(Value: String; Reason: Integer);
+begin
+  DoTextChanging(FText, Value, Reason);
+  if FText <> Value then begin
+    FText := Value;
+    Change(False);
+    DoTextChanged(Reason);
   end;
 end;
 
@@ -530,18 +601,15 @@ var
   procedure AcceptText;
   var
     S: String;
-    Accept: Boolean;
   begin
     S := FEditControl.Text;
-    Accept := True;
-    if Assigned(Item.FOnAcceptText) then
-      Item.FOnAcceptText(Self, S, Accept);
-    if Accept then
-      Item.Text := S;
+    if Item.DoAcceptText(S) then Item.SetTextEx(S, tcrEditControl);
   end;
 
 begin
   Item := TTBEditItem(Self.Item);
+  if FEditControl = nil then
+    Exit;
   if Message.Msg = WM_CHAR then
     case Word(Message.WParam) of
       VK_TAB: begin
@@ -567,6 +635,11 @@ begin
     View.CancelMode;
     FEditControlStatus := [ecsClose];
   end;
+end;
+
+function TTBEditItemViewer.GetEditControlClass: TEditClass;
+begin
+  Result := TEdit;
 end;
 
 procedure TTBEditItemViewer.GetEditRect(var R: TRect);
@@ -811,6 +884,7 @@ var
   Item: TTBEditItem;
   R: TRect;
   ActiveWnd, FocusWnd: HWND;
+  S: string;
 begin
   Item := TTBEditItem(Self.Item);
   GetEditRect(R);
@@ -825,7 +899,7 @@ begin
   { Create the edit control }
   InflateRect(R, -3, -3);
   //View.FreeNotification(Self);
-  FEditControl := TEdit.Create(nil);
+  FEditControl := GetEditControlClass.Create(nil);
   try
     FEditControl.Visible := False;
     FEditControl.BorderStyle := bsNone;
@@ -853,8 +927,13 @@ begin
     { Restore the original window procedure before destroying the control so
       it doesn't see a WM_KILLFOCUS message }
     RestoreEditControlWndProc;
+    S := FEditControl.Text;
     FreeAndNil(FEditControl);
   end;
+
+  with TTBEditItem(Item) do
+  if (FEditControlStatus = [ecsContinueLoop]) and ExtendedAccept then
+    if DoAcceptText(S) then SetTextEx(S, tcrEditControl);
 
   { ensure the area underneath the edit control is repainted immediately }
   View.Window.Update;

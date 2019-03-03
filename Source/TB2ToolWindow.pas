@@ -109,6 +109,9 @@ type
     property OnDockChanged;
     property OnDockChanging;
     property OnDockChangingHidden;
+    {$IFDEF JR_D9}
+    property OnMouseActivate;
+    {$ENDIF}
     property OnMouseDown;
     property OnMouseMove;
     property OnMouseUp;
@@ -195,14 +198,24 @@ function TTBToolWindow.CalcSize(ADock: TTBDock): TPoint;
 begin
   Result.X := FBarWidth;
   Result.Y := FBarHeight;
-  if Assigned(ADock) and (FullSize or Stretch) then begin
-    { If docked and stretching, return the minimum size so that the toolbar
-      can shrink below FBarWidth/FBarHeight }
-    if not(ADock.Position in [dpLeft, dpRight]) then
-      Result.X := FMinClientWidth
-    else
-      Result.Y := FMinClientHeight;
-  end;
+  if Assigned(ADock) then
+    if FullSize then
+    begin
+      { If docked and full size, return the size corresponding to docked size }
+      if not(ADock.Position in [dpLeft, dpRight]) then
+        Result.X := ADock.ClientWidth - (Width - ClientWidth)
+      else
+        Result.Y := ADock.ClientHeight - (Height - ClientHeight);
+    end
+    else if Stretch then
+    begin
+      { If docked and stretching, return the minimum size so that the toolbar
+        can shrink below FBarWidth/FBarHeight }
+      if not(ADock.Position in [dpLeft, dpRight]) then
+        Result.X := FMinClientWidth
+      else
+        Result.Y := FMinClientHeight;
+    end;
 end;
 
 procedure TTBToolWindow.GetBaseSize(var ASize: TPoint);
