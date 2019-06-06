@@ -581,21 +581,48 @@ uses
 type
   TControlAccess = class(TControl);
 
+function DockedBorderSize: Integer;
+begin
+  Result := DPIScale(2);
+end;
+
+function DockedBorderSize2: Integer;
+begin
+  Result := DockedBorderSize * 2;
+end;
+
+function DragHandleSizes(const CloseButtonWhenDocked: Boolean;
+  const DragHandleStyle: TTBDragHandleStyle): Integer;
 const
-  DockedBorderSize = 2;
-  DockedBorderSize2 = DockedBorderSize*2;
-  DragHandleSizes: array[Boolean, TTBDragHandleStyle] of Integer =
-    ((9, 0, 6), (14, 14, 14));
-  DragHandleXOffsets: array[Boolean, TTBDragHandleStyle] of Integer =
-    ((2, 0, 1), (3, 0, 5));
+  Sizes: array[Boolean, TTBDragHandleStyle] of Integer = ((9, 0, 6), (14, 14, 14));
+begin
+  Result := DPIScale(Sizes[CloseButtonWhenDocked, DragHandleStyle]);
+end;
+
+function DragHandleXOffsets(const CloseButtonWhenDocked: Boolean;
+  const DragHandleStyle: TTBDragHandleStyle): Integer;
+const
+  Offsets: array[Boolean, TTBDragHandleStyle] of Integer = ((2, 0, 1), (3, 0, 5));
+begin
+  Result := DPIScale(Offsets[CloseButtonWhenDocked, DragHandleStyle]);
+end;
+
+function DefaultBarWidthHeight: Integer;
+begin
+  Result := DPIScale(8);
+end;
+
+function ForceDockAtLeftPos: Integer;
+begin
+  Result := -DPIScale(8);
+end;
+
+const
   HT_TB2k_Border = 2000;
   HT_TB2k_Close = 2001;
   HT_TB2k_Caption = 2002;
 
-  DefaultBarWidthHeight = 8;
-
   ForceDockAtTopRow = 0;
-  ForceDockAtLeftPos = -8;
 
   PositionLeftOrRight = [dpLeft, dpRight];
 
@@ -2512,7 +2539,7 @@ begin
       R2 := R;
       DrawEdge(DC, R, EDGE_RAISED, BF_RECT or BF_ADJUST);
       S := FDockableWindow.GetFloatingBorderSize;
-      InflateRect(R2, -(S.X - 1), -(S.Y - 1));
+      InflateRect(R2, -(S.X - DPIScale(1)), -(S.Y - DPIScale(1)));
       FrameRect(DC, R2, GetSysColorBrush(COLOR_BTNFACE));
       SaveIndex := SaveDC(DC);
       ExcludeClipRect(DC, R2.Left, R2.Top, R2.Right, R2.Bottom);
@@ -2554,8 +2581,8 @@ begin
       if FDockableWindow.FCloseButton then begin
         R := GetCloseButtonRect(True);
         R2 := R;
-        InflateRect(R2, 0, -2);
-        Dec(R2.Right, 2);
+        InflateRect(R2, 0, -DPIScale(2));
+        Dec(R2.Right, DPIScale(2));
         if twrdCaption in RedrawWhat then begin
           SaveIndex := SaveDC(DC);
           ExcludeClipRect(DC, R2.Left, R2.Top, R2.Right, R2.Bottom);
@@ -3378,12 +3405,12 @@ begin
   BottomRight.X := Z;
   BottomRight.Y := Z;
   if not LeftRight then begin
-    Inc(TopLeft.X, DragHandleSizes[CloseButtonWhenDocked, DragHandleStyle]);
+    Inc(TopLeft.X, DragHandleSizes(CloseButtonWhenDocked, DragHandleStyle));
     //if FShowChevron then
     //  Inc(BottomRight.X, tbChevronSize);
   end
   else begin
-    Inc(TopLeft.Y, DragHandleSizes[CloseButtonWhenDocked, DragHandleStyle]);
+    Inc(TopLeft.Y, DragHandleSizes(CloseButtonWhenDocked, DragHandleStyle));
     //if FShowChevron then
     //  Inc(BottomRight.Y, tbChevronSize);
   end;
@@ -3417,14 +3444,14 @@ function TTBCustomDockableWindow.GetDockedCloseButtonRect(LeftRight: Boolean): T
 var
   X, Y, Z: Integer;
 begin
-  Z := DragHandleSizes[CloseButtonWhenDocked, FDragHandleStyle] - 3;
+  Z := DragHandleSizes(CloseButtonWhenDocked, FDragHandleStyle) - 3;
   if not LeftRight then begin
-    X := DockedBorderSize+1;
+    X := DockedBorderSize + DPIScale(1);
     Y := DockedBorderSize;
   end
   else begin
     X := (ClientWidth + DockedBorderSize) - Z;
-    Y := DockedBorderSize+1;
+    Y := DockedBorderSize + DPIScale(1);
   end;
   Result := Bounds(X, Y, Z, Z);
 end;
@@ -3441,7 +3468,7 @@ begin
     Result.X := DockedBorderSize2;
     Result.Y := DockedBorderSize2;
     if CurrentDock.FAllowDrag then begin
-      Z := DragHandleSizes[FCloseButtonWhenDocked, FDragHandleStyle];
+      Z := DragHandleSizes(FCloseButtonWhenDocked, FDragHandleStyle);
       if not(CurrentDock.Position in PositionLeftOrRight) then
         Inc(Result.X, Z)
       else
@@ -3458,7 +3485,7 @@ procedure TTBCustomDockableWindow.WMNCCalcSize(var Message: TWMNCCalcSize);
   begin
     InflateRect(R, -DockedBorderSize, -DockedBorderSize);
     if CurrentDock.FAllowDrag then begin
-      Z := DragHandleSizes[FCloseButtonWhenDocked, FDragHandleStyle];
+      Z := DragHandleSizes(FCloseButtonWhenDocked, FDragHandleStyle);
       if not(CurrentDock.Position in PositionLeftOrRight) then
         Inc(R.Left, Z)
       else
@@ -3500,7 +3527,7 @@ begin
       I := P.X - R.Left
     else
       I := P.Y - R.Top;
-    if I < DockedBorderSize + DragHandleSizes[CloseButtonWhenDocked, DragHandleStyle] then begin
+    if I < DockedBorderSize + DragHandleSizes(CloseButtonWhenDocked, DragHandleStyle) then begin
       SetCursor(LoadCursor(0, IDC_SIZEALL));
       Message.Result := 1;
       Exit;
@@ -3585,7 +3612,7 @@ begin
     else
       FrameRect(DC, R, Brush);
     R2 := R;
-    InflateRect(R2, -1, -1);
+    InflateRect(R2, -DPIScale(1), -DPIScale(1));
     if not UsingBackground then
       FrameRect(DC, R2, Brush);
 
@@ -3596,7 +3623,7 @@ begin
       P2 := CurrentDock.Parent.ClientToScreen(CurrentDock.BoundsRect.TopLeft);
       Dec(R2.Left, Left + CurrentDock.Left + (P1.X-P2.X));
       Dec(R2.Top, Top + CurrentDock.Top + (P1.Y-P2.Y));
-      InflateRect(R, -1, -1);
+      InflateRect(R, -DPIScale(1), -DPIScale(1));
       GetWindowRect(Handle, R4);
       R3 := ClientRect;
       with ClientToScreen(Point(0, 0)) do
@@ -3616,31 +3643,31 @@ begin
       else
         Y2 := ClientWidth;
       Inc(Y2, DockedBorderSize);
-      S := DragHandleSizes[FCloseButtonWhenDocked, FDragHandleStyle];
+      S := DragHandleSizes(FCloseButtonWhenDocked, FDragHandleStyle);
       if FDragHandleStyle <> dhNone then begin
         Y3 := Y2;
-        X := DockedBorderSize + DragHandleXOffsets[FCloseButtonWhenDocked, FDragHandleStyle];
+        X := DockedBorderSize + DragHandleXOffsets(FCloseButtonWhenDocked, FDragHandleStyle);
         Y := DockedBorderSize;
         YO := Ord(FDragHandleStyle = dhSingle);
         if FCloseButtonWhenDocked then begin
           if not VerticalDock then
-            Inc(Y, S - 2)
+            Inc(Y, S - DPIScale(2))
           else
-            Dec(Y3, S - 2);
+            Dec(Y3, S - DPIScale(2));
         end;
         Clr := GetSysColor(COLOR_BTNHIGHLIGHT);
         for B := False to (FDragHandleStyle = dhDouble) do begin
           if not VerticalDock then
-            R2 := Rect(X, Y+YO, X+3, Y2-YO)
+            R2 := Rect(X, Y+YO, X+DPIScale(3), Y2-YO)
           else
-            R2 := Rect(Y+YO, X, Y3-YO, X+3);
+            R2 := Rect(Y+YO, X, Y3-YO, X+DPIScale(3));
           DrawRaisedEdge(R2, True);
           if not VerticalDock then
-            SetPixelV(DC, X, Y2-1-YO, Clr)
+            SetPixelV(DC, X, Y2-DPIScale(1)-YO, Clr)
           else
-            SetPixelV(DC, Y3-1-YO, X, Clr);
+            SetPixelV(DC, Y3-DPIScale(1)-YO, X, Clr);
           ExcludeClipRect(DC, R2.Left, R2.Top, R2.Right, R2.Bottom);
-          Inc(X, 3);
+          Inc(X, DPIScale(3));
         end;
       end;
       if not UsingBackground then begin
@@ -3660,9 +3687,9 @@ begin
           DrawEdge(DC, R2, BDR_SUNKENOUTER, BF_RECT)
         else if FCloseButtonHover then
           DrawRaisedEdge(R2, False);
-        InflateRect(R2, -2, -2);
+        InflateRect(R2, -DPIScale(2), -DPIScale(2));
         if FCloseButtonDown then
-          OffsetRect(R2, 1, 1);
+          OffsetRect(R2, DPIScale(1), DPIScale(1));
         DrawButtonBitmap(CreateCloseButtonBitmap);
       end;
     end;
@@ -3907,7 +3934,7 @@ var
             C := FirstPos.X - LastPos.X
           else
             C := FirstPos.Y - LastPos.Y;
-          if Abs(C) >= 10 then begin
+          if Abs(C) >= DPIScale(10) then begin
             WatchForSplit := False;
             FDragSplitting := True;
             SetCursor(LoadCursor(0, SplitCursors[SplitVertical]));
@@ -3974,15 +4001,15 @@ var
       with Control do begin
         Result := False;
 
-        InflateRect(R, 3, 3);
+        InflateRect(R, DPIScale(3), DPIScale(3));
         S := GetDockRect(Control);
 
         { Like Office, distribute ~25 pixels of extra dock detection area
           to the left side if the toolbar was grabbed at the left, both sides
           if the toolbar was grabbed at the middle, or the right side if
           toolbar was grabbed at the right. If outside, don't try to dock. }
-        Sens := MulDiv(DockSensX, NPoint.X, DPoint.X);
-        if (Pos.X < R.Left-(DockSensX-Sens)) or (Pos.X >= R.Right+Sens) then
+        Sens := MulDiv(DPIScale(DockSensX), NPoint.X, DPoint.X);
+        if (Pos.X < R.Left-(DPIScale(DockSensX)-Sens)) or (Pos.X >= R.Right+Sens) then
           Exit;
 
         { Don't try to dock to the left or right if pointer is above or below
@@ -3993,8 +4020,8 @@ var
 
         { And also distribute ~25 pixels of extra dock detection area to
           the top or bottom side }
-        Sens := MulDiv(DockSensY, NPoint.Y, DPoint.Y);
-        if (Pos.Y < R.Top-(DockSensY-Sens)) or (Pos.Y >= R.Bottom+Sens) then
+        Sens := MulDiv(DPIScale(DockSensY), NPoint.Y, DPoint.Y);
+        if (Pos.Y < R.Top-(DPIScale(DockSensY)-Sens)) or (Pos.Y >= R.Bottom+Sens) then
           Exit;
 
         Result := IntersectRect(Temp, R, S);
@@ -4055,7 +4082,7 @@ var
       R2 := GetRectOfMonitorContainingPoint(Pos, True);
       R := R2;
       with GetFloatingBorderSize do
-        InflateRect(R, -(X+4), -(Y+4));
+        InflateRect(R, -(X+DPIScale(4)), -(Y+DPIScale(4)));
       if MoveRect.Bottom < R.Top then
         OffsetRect(MoveRect, 0, R.Top-MoveRect.Bottom);
       if MoveRect.Top > R.Bottom then
@@ -4066,7 +4093,7 @@ var
         OffsetRect(MoveRect, R.Right-MoveRect.Left, 0);
 
       GetFloatingNCArea(TL, BR);
-      I := R2.Top + 4 - TL.Y;
+      I := R2.Top + DPIScale(4) - TL.Y;
       if MoveRect.Top < I then
         OffsetRect(MoveRect, 0, I-MoveRect.Top);
     end;
@@ -4184,12 +4211,12 @@ begin
       if not(Parent is TTBFloatingWindowParent) then begin
         GetWindowRect(Handle, R);
         R.BottomRight := ClientToScreen(Point(0, 0));
-        DPoint := Point(Width-1, Height-1);
+        DPoint := Point(Width-DPIScale(1), Height-DPIScale(1));
       end
       else begin
         GetWindowRect(Parent.Handle, R);
         R.BottomRight := Parent.ClientToScreen(Point(0, 0));
-        DPoint := Point(Parent.Width-1, Parent.Height-1);
+        DPoint := Point(Parent.Width-DPIScale(1), Parent.Height-DPIScale(1));
       end;
       Dec(NPoint.X, R.Left-R.Right);
       Dec(NPoint.Y, R.Top-R.Bottom);

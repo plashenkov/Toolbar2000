@@ -296,8 +296,7 @@ type
       IsSelected, IsPushed, UseDisabledShadow: Boolean); override;
   end;
 
-const
-  tbChevronSize = 12;
+function tbChevronSize: Integer;
 
 
 implementation
@@ -305,6 +304,11 @@ implementation
 uses
   {$IFDEF CLR} System.Runtime.InteropServices, System.Text, {$ENDIF}
   TB2Consts, TB2Common, TB2Hook;
+
+function tbChevronSize: Integer;
+begin
+  Result := DPIScale(12);
+end;
 
 {$IFDEF WIN64}
 type
@@ -583,7 +587,7 @@ begin
   FShrinkMode := tbsmChevron;
   FSystemFont := True;
   Color := clBtnFace;
-  SetBounds(Left, Top, 23, 22);{}
+  SetBounds(Left, Top, DPIScale(23), DPIScale(22));{}
 end;
 
 destructor TTBCustomToolbar.Destroy;
@@ -1509,8 +1513,8 @@ begin
             NewSize := N.X - S.X
           else
             NewSize := N.Y - S.Y;
-          if NewSize > MaxDistance then
-            NewSize := MaxDistance;
+          if NewSize > DPIScale(MaxDistance) then
+            NewSize := DPIScale(MaxDistance);
           DistanceToLargerSize := NewSize;
         end;
         if I < NewSizes.Count-1 then begin
@@ -1519,8 +1523,8 @@ begin
             NewSize := S.X - N.X
           else
             NewSize := S.Y - N.Y;
-          if NewSize > MaxDistance then
-            NewSize := MaxDistance;
+          if NewSize > DPIScale(MaxDistance) then
+            NewSize := DPIScale(MaxDistance);
           DistanceToSmallerSize := NewSize;
         end;
         Break;

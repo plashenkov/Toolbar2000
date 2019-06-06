@@ -863,25 +863,25 @@ const
   tbMenuTextColor = clBtnText;
   {$ENDIF}
 
-  tbMenuVerticalMargin = 4;
-  tbMenuImageTextSpace = 1;
-  tbMenuLeftTextMargin = 2;
-  tbMenuRightTextMargin = 3;
-
-  tbMenuSeparatorOffset = 12;
-
-  tbMenuScrollArrowHeight = 19;
-
-  tbDropdownArrowWidth = 8;
-  tbDropdownArrowMargin = 3;
-  tbDropdownComboArrowWidth = 11;
-  tbDropdownComboMargin = 2;
-
-  tbLineSpacing = 6;
-  tbLineSepOffset = 1;
-  tbDockedLineSepOffset = 4;
-
   WM_TB2K_CLICKITEM = WM_USER + $100;
+
+function tbMenuVerticalMargin: Integer;
+function tbMenuImageTextSpace: Integer;
+function tbMenuLeftTextMargin: Integer;
+function tbMenuRightTextMargin: Integer;
+
+function tbMenuSeparatorOffset: Integer;
+
+function tbMenuScrollArrowHeight: Integer;
+
+function tbDropdownArrowWidth: Integer;
+function tbDropdownArrowMargin: Integer;
+function tbDropdownComboArrowWidth: Integer;
+function tbDropdownComboMargin: Integer;
+
+function tbLineSpacing: Integer;
+function tbLineSepOffset: Integer;
+function tbDockedLineSepOffset: Integer;
 
 function TBGetItems(const AObject: TObject): TTBCustomItem;
 procedure TBInitToolbarSystemFont;
@@ -916,6 +916,71 @@ uses
   {$IFDEF CLR} System.Runtime.InteropServices, System.Text, System.Threading,
     Types, WinUtils, {$ENDIF}
   MMSYSTEM, TB2Consts, TB2Common, IMM, TB2Acc;
+
+function tbMenuVerticalMargin: Integer;
+begin
+  Result := DPIScale(4);
+end;
+
+function tbMenuImageTextSpace: Integer;
+begin
+  Result := DPIScale(1);
+end;
+
+function tbMenuLeftTextMargin: Integer;
+begin
+  Result := DPIScale(2);
+end;
+
+function tbMenuRightTextMargin: Integer;
+begin
+  Result := DPIScale(3);
+end;
+
+function tbMenuSeparatorOffset: Integer;
+begin
+  Result := DPIScale(12);
+end;
+
+function tbMenuScrollArrowHeight: Integer;
+begin
+  Result := DPIScale(19);
+end;
+
+function tbDropdownArrowWidth: Integer;
+begin
+  Result := DPIScale(8);
+end;
+
+function tbDropdownArrowMargin: Integer;
+begin
+  Result := DPIScale(3);
+end;
+
+function tbDropdownComboArrowWidth: Integer;
+begin
+  Result := DPIScale(11);
+end;
+
+function tbDropdownComboMargin: Integer;
+begin
+  Result := DPIScale(2);
+end;
+
+function tbLineSpacing: Integer;
+begin
+  Result := DPIScale(6);
+end;
+
+function tbLineSepOffset: Integer;
+begin
+  Result := DPIScale(1);
+end;
+
+function tbDockedLineSepOffset: Integer;
+begin
+  Result := DPIScale(4);
+end;
 
 {$UNDEF ALLOCHWND_CLASSES}
 {$IFNDEF CLR}
@@ -2654,10 +2719,10 @@ procedure TTBSeparatorItemViewer.CalcSize(const Canvas: TCanvas;
 begin
   if not IsToolbarStyle then
     { Office 2000's menu separators have a hard-coded height of 10 }
-    AHeight := 10
+    AHeight := DPIScale(10)
   else begin
-    AWidth := 6;
-    AHeight := 6;
+    AWidth := DPIScale(6);
+    AHeight := DPIScale(6);
   end;
 end;
 
@@ -2679,7 +2744,7 @@ begin
   if LineSep then
     Horiz := not Horiz;
   if Horiz then begin
-    R.Top := R.Bottom div 2 - 1;
+    R.Top := R.Bottom div 2 - DPIScale(1);
     if not ToolbarStyle then
       InflateRect(R, -tbMenuSeparatorOffset, 0)
     else if LineSep then begin
@@ -2691,7 +2756,7 @@ begin
     DrawEdge(DC, R, EDGE_ETCHED, BF_TOP);
   end
   else begin
-    R.Left := R.Right div 2 - 1;
+    R.Left := R.Right div 2 - DPIScale(1);
     if LineSep then
       InflateRect(R, 0, -tbDockedLineSepOffset);
     DrawEdge(DC, R, EDGE_ETCHED, BF_LEFT);
@@ -2930,8 +2995,8 @@ begin
   DC := Canvas.Handle;
   ImgList := GetImageList;
   if ToolbarStyle then begin
-    AWidth := 6;
-    AHeight := 6;
+    AWidth := DPIScale(6);
+    AHeight := DPIScale(6);
   end
   else begin
     AWidth := 0;
@@ -2943,7 +3008,7 @@ begin
       Inc(AHeight, TextMetrics.tmHeight);
       Inc(AWidth, GetTextWidth(DC, GetCaptionText, True));
       if ToolbarStyle then
-        Inc(AWidth, 6);
+        Inc(AWidth, DPIScale(6));
     end
     else begin
       { Vertical text isn't always the same size as horizontal text, so we have
@@ -2954,21 +3019,21 @@ begin
       Inc(AWidth, TextMetrics.tmHeight);
       Inc(AHeight, GetTextWidth(DC, GetCaptionText, True));
       if ToolbarStyle then
-        Inc(AHeight, 6);
+        Inc(AHeight, DPIScale(6));
       SelectObject(DC, SaveFont);
       DeleteObject(RotatedFont);
     end;
   end;
   if ToolbarStyle and ImageShown and Assigned(ImgList) then begin
     if not IsRotated and not(tboImageAboveCaption in Item.EffectiveOptions) then begin
-      Inc(AWidth, ImgList.Width + 1);
-      if AHeight < ImgList.Height + 6 then
-        AHeight := ImgList.Height + 6;
+      Inc(AWidth, ImgList.Width + DPIScale(1));
+      if AHeight < ImgList.Height + DPIScale(6) then
+        AHeight := ImgList.Height + DPIScale(6);
     end
     else begin
       Inc(AHeight, ImgList.Height);
-      if AWidth < ImgList.Width + 7 then
-        AWidth := ImgList.Width + 7;
+      if AWidth < ImgList.Width + DPIScale(7) then
+        AWidth := ImgList.Width + DPIScale(7);
     end;
   end;
   if ToolbarStyle and (tbisSubmenu in Item.ItemStyle) then begin
@@ -2985,10 +3050,10 @@ begin
   if not ToolbarStyle then begin
     Inc(AHeight, TextMetrics.tmExternalLeading + tbMenuVerticalMargin);
     if Assigned(ImgList) then begin
-      H := ImgList.Height + 3;
+      H := ImgList.Height + DPIScale(3);
       if H > AHeight then
         AHeight := H;
-      LeftMargin := MulDiv(ImgList.Width + 3, AHeight, H);
+      LeftMargin := MulDiv(ImgList.Width + DPIScale(3), AHeight, H);
     end
     else
       LeftMargin := AHeight;
@@ -2996,7 +3061,7 @@ begin
       tbMenuRightTextMargin);
     S := Item.GetShortCutText;
     if S <> '' then
-      Inc(AWidth, (AHeight - 6) + GetTextWidth(DC, S, True));
+      Inc(AWidth, (AHeight - DPIScale(6)) + GetTextWidth(DC, S, True));
     Inc(AWidth, AHeight);
   end;
 end;
@@ -3023,10 +3088,10 @@ begin
   else begin
     ShadowColor := GetSysColor(COLOR_BTNSHADOW);
     HighlightColor := GetSysColor(COLOR_BTNHIGHLIGHT);
-    OffsetRect(ARect, 1, 1);
+    OffsetRect(ARect, DPIScale(1), DPIScale(1));
     SaveTextColor := SetTextColor(DC, HighlightColor);
     Draw;
-    OffsetRect(ARect, -1, -1);
+    OffsetRect(ARect, -DPIScale(1), -DPIScale(1));
     SetTextColor(DC, ShadowColor);
     Draw;
     SetTextColor(DC, SaveTextColor);
@@ -3082,16 +3147,16 @@ var
         ClientAreaRect.Top + ((ClientAreaRect.Bottom - ClientAreaRect.Top) - MenuCheckHeight) div 2);
       if not UseDisabledShadow then begin
         if ShowEnabled and (tbisCombo in Item.ItemStyle) and IsSelected then begin
-          OffsetRect(BR, 1, 1);
+          OffsetRect(BR, DPIScale(1), DPIScale(1));
           DrawWithColor(clBtnText);
         end
         else
           DrawWithColor(Canvas.Font.Color);
       end
       else begin
-        OffsetRect(BR, 1, 1);
+        OffsetRect(BR, DPIScale(1), DPIScale(1));
         DrawWithColor(clBtnHighlight);
-        OffsetRect(BR, -1, -1);
+        OffsetRect(BR, -DPIScale(1), -DPIScale(1));
         DrawWithColor(clBtnShadow);
       end;
     finally
@@ -3109,21 +3174,21 @@ var
       X := (R.Left + R.Right) div 2;
       Y := (R.Top + R.Bottom) div 2;
       if not Rotated then begin
-        Dec(Y);
-        P[0].X := X-2;
+        Dec(Y, DPIScale(1));
+        P[0].X := X-DPIScale(2);
         P[0].Y := Y;
-        P[1].X := X+2;
+        P[1].X := X+DPIScale(2);
         P[1].Y := Y;
         P[2].X := X;
-        P[2].Y := Y+2;
+        P[2].Y := Y+DPIScale(2);
       end
       else begin
-        Dec(X);
+        Dec(X, DPIScale(1));
         P[0].X := X;
-        P[0].Y := Y+2;
+        P[0].Y := Y+DPIScale(2);
         P[1].X := X;
-        P[1].Y := Y-2;
-        P[2].X := X-2;
+        P[1].Y := Y-DPIScale(2);
+        P[2].X := X-DPIScale(2);
         P[2].Y := Y;
       end;
       Canvas.Pen.Color := AColor;
@@ -3135,9 +3200,9 @@ var
     if not UseDisabledShadow then
       DrawWithColor(Canvas.Font.Color)
     else begin
-      OffsetRect(R, 1, 1);
+      OffsetRect(R, DPIScale(1), DPIScale(1));
       DrawWithColor(clBtnHighlight);
-      OffsetRect(R, -1, -1);
+      OffsetRect(R, -DPIScale(1), -DPIScale(1));
       DrawWithColor(clBtnShadow);
     end;
   end;
@@ -3180,7 +3245,7 @@ begin
   LeftMargin := 0;
   if not ToolbarStyle then begin
     if Assigned(ImgList) then
-      LeftMargin := MulDiv(ImgList.Width + 3, ClientAreaRect.Bottom, ImgList.Height + 3)
+      LeftMargin := MulDiv(ImgList.Width + DPIScale(3), ClientAreaRect.Bottom, ImgList.Height + DPIScale(3))
     else
       LeftMargin := ClientAreaRect.Bottom;
   end;
@@ -3219,21 +3284,21 @@ begin
     end;
     if HasArrow then begin
       if not(tbisCombo in Item.ItemStyle) and IsPushed then
-        OffsetRect(RD, 1, 1);
+        OffsetRect(RD, DPIScale(1), DPIScale(1));
       DrawDropdownArrow(RD, not(tbisCombo in Item.ItemStyle) and
         (View.Orientation = tbvoVertical));
     end;
-    InflateRect(RC, -1, -1);
+    InflateRect(RC, -DPIScale(1), -DPIScale(1));
     if Item.Checked and not (IsSelected and ShowEnabled) then begin
       Canvas.Brush.Bitmap := GetDitherBitmap;
       Canvas.FillRect(RC);
       Canvas.Brush.Style := bsClear;
     end;
-    InflateRect(RC, -1, -1);
+    InflateRect(RC, -DPIScale(1), -DPIScale(1));
     if Item.Checked or
        ((IsSelected and IsPushed) and
         (not(tbisCombo in Item.ItemStyle) or View.FCapture)) then
-      OffsetRect(RC, 1, 1);
+      OffsetRect(RC, DPIScale(1), DPIScale(1));
     if HasArrow and not(tbisCombo in Item.ItemStyle) then begin
       if View.Orientation <> tbvoVertical then
         Dec(RC.Right, tbDropdownArrowWidth)
@@ -3269,9 +3334,9 @@ begin
     if ToolbarStyle then begin
       if ImageIsShown then begin
         if not IsRotated and not(tboImageAboveCaption in Item.EffectiveOptions) then
-          Inc(R.Left, ImgList.Width + 1)
+          Inc(R.Left, ImgList.Width + DPIScale(1))
         else
-          Inc(R.Top, ImgList.Height + 1);
+          Inc(R.Top, ImgList.Height + DPIScale(1));
       end;
       DrawItemCaption(Canvas, R, S, UseDisabledShadow,
         DT_SINGLELINE or DT_CENTER or DT_VCENTER or DrawTextFlags)
@@ -3282,7 +3347,7 @@ begin
         is 4 pixels less than the total item height. This is done so underlined
         characters aren't displayed too low. }
       if (R.Bottom - R.Top) - (TextMetrics.tmHeight + TextMetrics.tmExternalLeading) = tbMenuVerticalMargin then
-        Dec(R.Bottom);
+        Dec(R.Bottom, DPIScale(1));
       Inc(R.Top, TextMetrics.tmExternalLeading);
       DrawItemCaption(Canvas, R, S, UseDisabledShadow,
         DT_SINGLELINE or DT_LEFT or DT_VCENTER or DrawTextFlags);
@@ -3299,7 +3364,7 @@ begin
         is 4 pixels less than the total item height. This is done so underlined
         characters aren't displayed too low. }
       if (R.Bottom - R.Top) - (TextMetrics.tmHeight + TextMetrics.tmExternalLeading) = tbMenuVerticalMargin then
-        Dec(R.Bottom);
+        Dec(R.Bottom, DPIScale(1));
       Inc(R.Top, TextMetrics.tmExternalLeading);
       DrawItemCaption(Canvas, R, S, UseDisabledShadow,
         DT_SINGLELINE or DT_LEFT or DT_VCENTER or DT_NOPREFIX);
@@ -3311,7 +3376,7 @@ begin
         if IsSelected and ShowEnabled then
           DrawEdge(Canvas.Handle, R, BDR_SUNKENOUTER, BF_RECT or BF_MIDDLE)
         else begin
-          Dec(R.Left);
+          Dec(R.Left, DPIScale(1));
           if not IsSelected then
             DrawEdge(Canvas.Handle, R, EDGE_ETCHED, BF_LEFT)
           else
@@ -3327,23 +3392,23 @@ begin
     R := RC;
     if ToolbarStyle then begin
       if not IsRotated and not(tboImageAboveCaption in Item.EffectiveOptions) then
-        R.Right := R.Left + ImgList.Width + 2
+        R.Right := R.Left + ImgList.Width + DPIScale(2)
       else
-        R.Bottom := R.Top + ImgList.Height + 2;
+        R.Bottom := R.Top + ImgList.Height + DPIScale(2);
     end
     else begin
       R.Right := R.Left + LeftMargin;
       if (IsSelected and ShowEnabled) or Item.Checked then
         DrawEdge(Canvas.Handle, R, EdgeStyles[Item.Checked], BF_RECT or BF_MIDDLE);
       if Item.Checked and not IsSelected then begin
-        InflateRect(R, -1, -1);
+        InflateRect(R, -DPIScale(1), -DPIScale(1));
         Canvas.Brush.Bitmap := GetDitherBitmap;
         Canvas.FillRect(R);
         Canvas.Brush.Style := bsClear;
-        InflateRect(R, 1, 1);
+        InflateRect(R, DPIScale(1), DPIScale(1));
       end;
       if Item.Checked then
-        OffsetRect(R, 1, 1);
+        OffsetRect(R, DPIScale(1), DPIScale(1));
     end;
     if ImageIsShown then begin
       X := R.Left + ((R.Right - R.Left) - ImgList.Width) div 2;
@@ -3363,21 +3428,21 @@ begin
         if Item.RadioItem then begin
           Canvas.Pen.Color := clBtnText;
           Canvas.Brush.Color := clBtnText;
-          Canvas.RoundRect(X-3, Y-3, X+2, Y+2, 2, 2);
+          Canvas.RoundRect(X-DPIScale(3), Y-DPIScale(3), X+DPIScale(2), Y+DPIScale(2), DPIScale(2), DPIScale(2));
           Canvas.Pen.Color := clBtnHighlight;
           Canvas.Brush.Style := bsClear;
-          Canvas.RoundRect(X-4, Y-4, X+3, Y+3, 6, 6);
+          Canvas.RoundRect(X-DPIScale(4), Y-DPIScale(4), X+DPIScale(3), Y+DPIScale(3), DPIScale(6), DPIScale(6));
         end
         else begin
-          Dec(X, 2);
-          Inc(Y);
+          Dec(X, DPIScale(2));
+          Inc(Y, DPIScale(1));
           for I := Low(BlackPoints) to High(BlackPoints) do begin
-            BlackPoints[I].X := X + BlackCheckMarkPoints[I].X;
-            BlackPoints[I].Y := Y + BlackCheckMarkPoints[I].Y;
+            BlackPoints[I].X := X + DPIScale(BlackCheckMarkPoints[I].X);
+            BlackPoints[I].Y := Y + DPIScale(BlackCheckMarkPoints[I].Y);
           end;
           for I := Low(WhitePoints) to High(WhitePoints) do begin
-            WhitePoints[I].X := X + WhiteCheckMarkPoints[I].X;
-            WhitePoints[I].Y := Y + WhiteCheckMarkPoints[I].Y;
+            WhitePoints[I].X := X + DPIScale(WhiteCheckMarkPoints[I].X);
+            WhitePoints[I].Y := Y + DPIScale(WhiteCheckMarkPoints[I].Y);
           end;
           Canvas.Pen.Color := clBtnText;
           Polyline(Canvas.Handle, BlackPoints, Length(BlackPoints));
@@ -5091,7 +5156,7 @@ begin
     TopY := Margins.Top;
     if AWrapOffset > 0 then begin
       Dec(AWrapOffset, Margins.Right);
-      if AWrapOffset < 1 then AWrapOffset := 1;
+      if AWrapOffset < DPIScale(1) then AWrapOffset := DPIScale(1);
     end;
     CurX := LeftX;
     CurY := TopY;
@@ -5215,10 +5280,10 @@ begin
   if (ABaseSize.X = 0) or (ABaseSize.Y = 0) then begin
     { If there are no visible items... }
     {}{scale this?}
-    ABaseSize.X := 23;
-    ABaseSize.Y := 22;
-    if TotalSize.X < 23 then TotalSize.X := 23;
-    if TotalSize.Y < 22 then TotalSize.Y := 22;
+    ABaseSize.X := DPIScale(23);
+    ABaseSize.Y := DPIScale(22);
+    if TotalSize.X < DPIScale(23) then TotalSize.X := DPIScale(23);
+    if TotalSize.Y < DPIScale(22) then TotalSize.Y := DPIScale(22);
   end;
 end;
 
@@ -5265,10 +5330,10 @@ procedure TTBView.GetMargins(AOrientation: TTBViewOrientation;
   var Margins: TRect);
 begin
   if AOrientation = tbvoFloating then begin
-    Margins.Left := 4;
-    Margins.Top := 2;
-    Margins.Right := 4;
-    Margins.Bottom := 1;
+    Margins.Left := DPIScale(4);
+    Margins.Top := DPIScale(2);
+    Margins.Right := DPIScale(4);
+    Margins.Bottom := DPIScale(1);
   end
   else begin
     Margins.Left := 0;
@@ -6493,7 +6558,10 @@ begin
             is up, so swallow the message. }
           ;
         WM_CONTEXTMENU:
-          HandlePopupMenu(SmallPointToPoint(TSmallPoint(Msg.lParam)));
+          { Windows still sends WM_CONTEXTMENU messages for "context menu"
+            keystrokes even if WM_KEYUP messages are never dispatched,
+            so it must specifically ignore this message }
+          ;
         WM_KEYFIRST..WM_KEYLAST: begin
             Application.CancelHint;
             MouseIsDown := (GetKeyState(VK_LBUTTON) < 0) or
@@ -6687,7 +6755,7 @@ constructor TTBPopupWindow.CreatePopupWindow(AOwner: TComponent;
 begin
   inherited Create(AOwner);
   Visible := False;
-  SetBounds(0, 0, 320, 240);
+  SetBounds(0, 0, DPIScale(320), DPIScale(240));
   ControlStyle := ControlStyle - [csCaptureMouse];
   ShowHint := True;
   Color := tbMenuBkColor;
@@ -6885,18 +6953,18 @@ procedure TTBPopupWindow.PaintScrollArrows;
   begin
     X := (R.Left + R.Right) div 2;
     Y := (R.Top + R.Bottom) div 2;
-    Dec(Y);
-    P[0].X := X-3;
+    Dec(Y, DPIScale(1));
+    P[0].X := X-DPIScale(3);
     P[0].Y := Y;
-    P[1].X := X+3;
+    P[1].X := X+DPIScale(3);
     P[1].Y := Y;
     P[2].X := X;
     P[2].Y := Y;
     if ADown then
-      Inc(P[2].Y, 3)
+      Inc(P[2].Y, DPIScale(3))
     else begin
-      Inc(P[0].Y, 3);
-      Inc(P[1].Y, 3);
+      Inc(P[0].Y, DPIScale(3));
+      Inc(P[1].Y, DPIScale(3));
     end;
     Canvas.Pen.Color := tbMenuTextColor;
     Canvas.Brush.Color := tbMenuTextColor;
@@ -6956,9 +7024,9 @@ begin
   else begin
     FrameRect(DC, R, GetSysColorBrush(COLOR_BTNSHADOW));
     Brush := CreateSolidBrush(ColorToRGB(TTBPopupWindow(AppData).Color));
-    InflateRect(R, -1, -1);
+    InflateRect(R, -DPIScale(1), -DPIScale(1));
     FrameRect(DC, R, Brush);
-    InflateRect(R, -1, -1);
+    InflateRect(R, -DPIScale(1), -DPIScale(1));
     FrameRect(DC, R, Brush);
     DeleteObject(Brush);
   end;

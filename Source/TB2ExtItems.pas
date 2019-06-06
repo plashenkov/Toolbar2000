@@ -229,9 +229,15 @@ implementation
 uses
   TB2Common, TB2Consts;
 
-const
-  EditMenuTextMargin = 3;
-  EditMenuMidWidth = 4;
+function EditMenuTextMargin: Integer;
+begin
+  Result := DPIScale(3);
+end;
+
+function EditMenuMidWidth: Integer;
+begin
+  Result := DPIScale(4);
+end;
 
 type
   TControlAccess = class(TControl);
@@ -244,7 +250,7 @@ constructor TTBEditAction.Create(AOwner: TComponent);
 begin
   inherited;
   FEditOptions := EditItemDefaultEditOptions;
-  FEditWidth := EditItemDefaultEditWidth;
+  FEditWidth := DPIScale(EditItemDefaultEditWidth);
   DisableIfNoHandler := False;
 end;
 
@@ -432,7 +438,7 @@ constructor TTBEditItem.Create(AOwner: TComponent);
 begin
   inherited;
   FEditOptions := EditItemDefaultEditOptions;
-  FEditWidth := EditItemDefaultEditWidth;
+  FEditWidth := DPIScale(EditItemDefaultEditWidth);
 end;
 
 procedure TTBEditItem.ActionChange(Sender: TObject; CheckDefaults: Boolean);
@@ -502,7 +508,7 @@ end;
 
 function TTBEditItem.IsEditWidthStored: Boolean;
 begin
-  Result := (EditWidth <> EditItemDefaultEditWidth) and
+  Result := (EditWidth <> DPIScale(EditItemDefaultEditWidth)) and
     ((ActionLink = nil) or not(ActionLink is TTBEditItemActionLink) or
      not TTBEditItemActionLink(ActionLink).IsEditWidthLinked);
 end;
@@ -670,7 +676,7 @@ begin
   Item := TTBEditItem(Self.Item);
   DC := Canvas.Handle;
   AWidth := Item.FEditWidth;
-  AHeight := GetTextHeight(DC) + (EditMenuTextMargin * 2) + 1;
+  AHeight := GetTextHeight(DC) + (EditMenuTextMargin * 2) + DPIScale(1);
   if not IsToolbarStyle and (Item.EditCaption <> '') then begin
     Inc(AWidth, GetTextWidth(DC, Item.EditCaption, True) + EditMenuMidWidth +
       EditMenuTextMargin * 2);
@@ -722,15 +728,15 @@ begin
   { Border }
   if IsSelected and Item.Enabled then
     DrawEdge(Canvas.Handle, R, BDR_SUNKENOUTER, BF_RECT);
-  InflateRect(R, -1, -1);
+  InflateRect(R, -DPIScale(1), -DPIScale(1));
   Canvas.Brush.Color := FillColors[not Item.Enabled];
   Canvas.FrameRect(R);
-  InflateRect(R, -1, -1);
+  InflateRect(R, -DPIScale(1), -DPIScale(1));
 
   { Fill }
   Canvas.Brush.Color := FillColors[Item.Enabled];
   Canvas.FillRect(R);
-  InflateRect(R, -1, -1);
+  InflateRect(R, -DPIScale(1), -DPIScale(1));
 
   { Text }
   if Item.Text <> '' then begin
@@ -749,7 +755,7 @@ begin
     Exit;
   GetEditRect(R);
   OffsetRect(R, -BoundsRect.Left, -BoundsRect.Top);
-  InflateRect(R, -2, -2);
+  InflateRect(R, -DPIScale(2), -DPIScale(2));
   if PtInRect(R, Pt) then
     ACursor := LoadCursor(0, IDC_IBEAM);
 end;
@@ -897,7 +903,7 @@ begin
   FocusWnd := GetFocus;
 
   { Create the edit control }
-  InflateRect(R, -3, -3);
+  InflateRect(R, -DPIScale(3), -DPIScale(3));
   //View.FreeNotification(Self);
   FEditControl := GetEditControlClass.Create(nil);
   try

@@ -117,6 +117,7 @@ function StripTrailingPunctuation(const S: String): String;
 function TextOutStr(const DC: HDC; const X, Y: Integer;
   const AText: String): BOOL;
 function UsingMultipleMonitors: Boolean;
+function DPIScale(const X: Integer): Integer;
 
 const
   PopupMenuWindowNCSize = 3;
@@ -1337,7 +1338,7 @@ begin
   if (P > 0) and (AFormat and DT_HIDEPREFIX = 0) then begin
     SU := GetTextWidth(DC, Copy(AText, 1, P-1), False);
     FU := SU + GetTextWidth(DC, AText[P], False);
-    Inc(X, TextMetrics.tmDescent - 2);
+    Inc(X, TextMetrics.tmDescent - DPIScale(2));
     Pen := CreatePen(PS_SOLID, 1, GetTextColor(DC));
     SavePen := SelectObject(DC, Pen);
     MoveToEx(DC, X, Y + SU, nil);
@@ -1604,6 +1605,11 @@ begin
   Result := Longint(I);
 end;
 {$ENDIF}
+
+function DPIScale(const X: Integer): Integer;
+begin
+  Result := MulDiv(X, Screen.PixelsPerInch, 96);
+end;
 
 initialization
   InitGradientFillFunc;

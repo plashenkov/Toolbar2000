@@ -124,6 +124,9 @@ type
 
 implementation
 
+uses
+  TB2Common;
+
 const
   { Constants for TTBToolWindow-specific registry values. Do not localize! }
   rvClientWidth = 'ClientWidth';
@@ -135,10 +138,10 @@ const
 constructor TTBToolWindow.Create(AOwner: TComponent);
 begin
   inherited;
-  FMinClientWidth := 32;
-  FMinClientHeight := 32;
+  FMinClientWidth := DPIScale(32);
+  FMinClientHeight := DPIScale(32);
   { Initialize the client size to 32x32 }
-  SetBounds(Left, Top, 32, 32);
+  SetBounds(Left, Top, DPIScale(32), DPIScale(32));
 end;
 
 procedure TTBToolWindow.Paint;
