@@ -5558,13 +5558,9 @@ begin
         if Floating then
           N := rdDockedToFloating
         else if Docked then begin
-          if CurrentDock.FAllowDrag then begin
-            N := CurrentDock.Name;
-            if N = '' then
-              raise Exception.Create(STBToolwinDockedToNameNotSet);
-          end
-          else
-            N := '';
+          N := CurrentDock.Name;
+          if N = '' then
+            raise Exception.Create(STBToolwinDockedToNameNotSet);
         end
         else
           Continue;  { skip if it's neither floating nor docked }
