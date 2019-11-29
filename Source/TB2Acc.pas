@@ -34,7 +34,7 @@ interface
 {$I TB2Ver.inc}
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  Types, Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   {$IFDEF CLR} System.Runtime.InteropServices, {$ENDIF}
   TB2Item;
 
@@ -247,7 +247,7 @@ var
 implementation
 
 uses
-  {$IFDEF CLR} System.Security, System.Threading, Types, {$ENDIF}
+  {$IFDEF CLR} System.Security, System.Threading, {$ENDIF}
   {$IFNDEF CLR} {$IFDEF JR_D6} Variants, {$ENDIF} {$ENDIF}
   ActiveX, Menus, TB2Common;
 

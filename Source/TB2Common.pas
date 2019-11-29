@@ -31,7 +31,7 @@ interface
 {$I TB2Ver.inc}
 
 uses
-  Windows, Classes, SysUtils, Messages, Controls, Forms;
+  Types, Windows, Classes, SysUtils, Messages, Controls, Forms;
 
 type
   THandleWMPrintNCPaintProc = procedure(Wnd: HWND; DC: HDC; AppData: TObject);
@@ -126,7 +126,7 @@ const
 implementation
 
 uses
-  {$IFDEF CLR} Types, System.Security, System.Runtime.InteropServices,
+  {$IFDEF CLR} System.Security, System.Runtime.InteropServices,
     System.Text, MultiMon, {$ENDIF}
   MMSYSTEM, TB2Version;
 

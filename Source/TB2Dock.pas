@@ -37,7 +37,7 @@ interface
 {$I TB2Ver.inc}
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, IniFiles;
+  Types, Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, IniFiles;
 
 type
   TTBCustomForm = {$IFDEF JR_D3} TCustomForm {$ELSE} TForm {$ENDIF};
@@ -574,7 +574,7 @@ function TBValidToolWindowParentForm(const ToolWindow: TTBCustomDockableWindow):
 implementation
 
 uses
-  {$IFDEF CLR} Types, System.Runtime.InteropServices, {$ENDIF}
+  {$IFDEF CLR} System.Runtime.InteropServices, {$ENDIF}
   Registry, Consts, Menus,
   TB2Common, TB2Hook, TB2Consts;
 

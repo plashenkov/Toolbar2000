@@ -38,9 +38,10 @@ interface
     XP with themes enabled. }
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  Types, Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   {$IFDEF CLR} TB2OleMarshal, {$ENDIF}
-  StdCtrls, CommCtrl, Menus, ActnList, ImgList, TB2Anim;
+  StdCtrls, CommCtrl, Menus, ActnList, ImgList, {$IFDEF JR_D17} UITypes,{$ENDIF}
+  TB2Anim;
 
 const
   WM_TB2K_POPUPSHOWING = WM_USER + 554;
@@ -914,7 +915,7 @@ implementation
 
 uses
   {$IFDEF CLR} System.Runtime.InteropServices, System.Text, System.Threading,
-    Types, WinUtils, {$ENDIF}
+    WinUtils, {$ENDIF}
   MMSYSTEM, TB2Consts, TB2Common, IMM, TB2Acc;
 
 function tbMenuVerticalMargin: Integer;
@@ -4865,7 +4866,6 @@ var
   Ctl: TControl;
   ChangedBold: Boolean;
   I, HighestSameWidthViewerWidth, Total, J, TotalVisibleItems: Integer;
-  IsFirst: Boolean;
   Viewer: TTBItemViewer;
   UseChevron, NonControlsOffEdge, TempViewerCreated: Boolean;
   Margins: TRect;
