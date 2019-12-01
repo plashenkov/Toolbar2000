@@ -66,6 +66,12 @@
   {$IFEND}
 {$ENDIF}
 
+{$IFDEF JR_D17}
+  {$IF CompilerVersion >= 25} {Delphi XE4}
+    {$LEGACYIFEND ON} // http://docwiki.embarcadero.com/RADStudio/Rio/en/Legacy_IFEND_(Delphi)
+  {$IFEND}
+{$ENDIF}
+
 {$ALIGN ON}
 {$BOOLEVAL OFF}
 {$LONGSTRINGS ON}
