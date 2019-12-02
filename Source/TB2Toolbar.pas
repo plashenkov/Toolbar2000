@@ -95,7 +95,7 @@ type
     function GetOptions: TTBItemOptions;
     procedure InstallMainWindowHook;
     function IsChevronHintStored: Boolean;
-    class function MainWindowHook(var Message: TMessage): Boolean; {$IFDEF CLR} static; {$ENDIF}
+    function MainWindowHook(var Message: TMessage): Boolean;
     procedure SetChevronHint(const Value: String);
     procedure SetChevronMoveItems(Value: Boolean);
     procedure SetChevronPriorityForNewItems(Value: TTBChevronPriorityForNewItems);
@@ -1717,7 +1717,7 @@ var
   HookCount: Integer;
   HookList: TList;
 
-class function TTBCustomToolbar.MainWindowHook(var Message: TMessage): Boolean;
+function TTBCustomToolbar.MainWindowHook(var Message: TMessage): Boolean;
 
   function GetActiveForm: TCustomForm;
   var
