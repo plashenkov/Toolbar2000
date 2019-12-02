@@ -26,4 +26,5 @@ See [LICENSE.md](LICENSE.md).
 
 Jordan Russell (http://jrsoftware.org), author of Toolbar2000.  
 Alex A. Denisov, TBX-related modifications.  
-Yuri Plashenkov (https://plashenkov.com), later fixes.
+zed (https://github.com/zedxxx), later fixes.
+Yuri Plashenkov (https://github.com/plashenkov), later fixes.
