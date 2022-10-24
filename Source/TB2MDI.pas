@@ -711,4 +711,7 @@ begin
     PostMessage(Form.Handle, WM_COMMAND, Word(TTBCustomItem(Sender).Tag), 0);
 end;
 
+initialization
+  CBTHookHandle := 0;
+
 end.
