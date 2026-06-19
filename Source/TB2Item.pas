@@ -1940,8 +1940,8 @@ begin
             X := ParentItemRect.Right
           else
             X := ParentItemRect.Left - W;
-          if X < MonitorRect.Top then
-            X := MonitorRect.Top;
+          if X < MonitorRect.Left then
+            X := MonitorRect.Left;
         end;
       end
       else begin
